@@ -43,16 +43,18 @@ Notes:
 
 '''
 
-import os
-import sys
-import tempfile
 import gzip
 import math
+import os
+import shutil
+import sys
+import sysconfig
+import tempfile
 from functools import partial
-from textwrap import wrap
-from subprocess import Popen, PIPE
 from itertools import groupby, islice
 from multiprocessing import Pool
+from subprocess import PIPE, Popen
+from textwrap import wrap
 
 from Bio.SearchIO.HmmerIO import Hmmer3TextParser as HMMERParser
 
@@ -509,9 +511,11 @@ def run_hmmer(sequence_list,hmm_database="ALL",hmmerpath="", ncpu=None, bit_scor
 
     # Run hmmer as a subprocess
     if hmmerpath:
-        hmmscan = os.path.join(hmmerpath,"hmmscan")
-    else:
+        hmmscan = os.path.join(hmmerpath, "hmmscan")
+    elif shutil.which("hmmscan") is not None:
         hmmscan = "hmmscan"
+    else:
+        hmmscan = os.path.join(sysconfig.get_paths()["scripts"], "hmmscan")
     try:
         if ncpu is None:
             command = [ hmmscan, "-o", output_filename, HMM,  fasta_filename]
